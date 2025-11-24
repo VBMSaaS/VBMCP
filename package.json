@@ -1,0 +1,39 @@
+{
+  "name": "vbmsaas-mcp-platform",
+  "version": "1.0.0",
+  "description": "VBMSaaS MCP Platform - Model Context Protocol integration for IDE and AI agents",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspaces",
+    "clean": "npm run clean --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "install:all": "npm install && npm install --workspaces"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "vscode",
+    "ide-plugin",
+    "ai-agent",
+    "saas"
+  ],
+  "author": "VBMSaaS Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vbmsaas/mcp-platform"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}
+

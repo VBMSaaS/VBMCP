@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "vbmsaas": {
+      "command": "node",
+      "args": [
+        "/path/to/VBMCP/packages/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "VBMSAAS_API_URL": "https://your-vbmsaas-api-url",
+        "VBMSAAS_ACCESS_KEY": "your-access-key-here"
+      }
+    }
+  }
+}
+

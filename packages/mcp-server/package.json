@@ -1,0 +1,31 @@
+{
+  "name": "@vbmsaas/mcp-server",
+  "version": "1.0.0",
+  "description": "VBMSaaS MCP Server - Model Context Protocol server implementation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts"
+  },
+  "bin": {
+    "vbmsaas-mcp-server": "./dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.2",
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  }
+}

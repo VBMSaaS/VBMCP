@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+out/
+build/
+*.vsix
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.auth
+.env.credentials
+
+# Credentials and sensitive data
+credentials.json
+test-config.json
+**/secrets/
+**/*.secret
+**/*.credentials
+mcp-config.json
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+test-*.mjs
+test-*.js
+**/test-*.mjs
+**/test-*.js
+
+# Development documentation
+*指南.md
+*说明.md
+*总结.md
+PROJECT_SUMMARY.md
+DEPLOYMENT_CHECKLIST.md
+TESTING_GUIDE.md
+QUICKSTART.md
+doc/
+docs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Development scripts
+check-*.mjs
+check-*.js
+create-*.mjs
+create-*.js
+create-*.ps1
+delete-*.mjs
+delete-*.js
+extract-*.mjs
+extract-*.js
+generate-*.mjs
+generate-*.js
+verify-*.mjs
+verify-*.js
+
