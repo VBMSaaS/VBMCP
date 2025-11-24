@@ -1,33 +1,61 @@
-{
-  "name": "@vbmsaas/mcp-server",
-  "version": "1.0.0",
-  "description": "VBMSaaS MCP Server - Model Context Protocol server implementation",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "license": "Apache-2.0",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "rimraf dist",
-    "start": "node dist/index.js",
-    "lint": "eslint src --ext .ts",
-    "env:check": "node -r dotenv/config dist/cli.js check",
-    "env:config": "node -r dotenv/config dist/cli.js config"
-  },
-  "bin": {
-    "vbmsaas-mcp-server": "./dist/index.js"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0",
-    "axios": "^1.6.2",
-    "dotenv": "^17.2.3",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.10.0",
-    "rimraf": "^5.0.5",
-    "typescript": "^5.3.3"
-  }
+﻿{
+    "name":  "@vbmsaas/mcp-server",
+    "version":  "1.0.0",
+    "description":  "VBMSaaS MCP Server - Model Context Protocol server for VBMSaaS platform integration",
+    "type":  "module",
+    "main":  "dist/index.js",
+    "types":  "dist/index.d.ts",
+    "license":  "Apache-2.0",
+    "author":  "VBMSaaS Team",
+    "homepage":  "https://github.com/VBMSaaS/VBMCP#readme",
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/VBMSaaS/VBMCP.git"
+                   },
+    "bugs":  {
+                 "url":  "https://github.com/VBMSaaS/VBMCP/issues"
+             },
+    "keywords":  [
+                     "mcp",
+                     "model-context-protocol",
+                     "vbmsaas",
+                     "ai-agent",
+                     "claude",
+                     "resource-management",
+                     "saas-platform"
+                 ],
+    "engines":  {
+                    "node":  "\u003e=18.0.0"
+                },
+    "files":  [
+                  "dist",
+                  ".env.template",
+                  "README.md"
+              ],
+    "scripts":  {
+                    "build":  "tsc",
+                    "dev":  "tsc --watch",
+                    "clean":  "rimraf dist",
+                    "start":  "node dist/index.js",
+                    "lint":  "eslint src --ext .ts",
+                    "env:check":  "node -r dotenv/config dist/cli.js check",
+                    "env:config":  "node -r dotenv/config dist/cli.js config",
+                    "prepublishOnly":  "npm run clean \u0026\u0026 npm run build"
+                },
+    "bin":  {
+                "vbmcp":  "./dist/index.js",
+                "vbmcp-config":  "./dist/cli.js"
+            },
+    "dependencies":  {
+                         "@modelcontextprotocol/sdk":  "^0.5.0",
+                         "axios":  "^1.6.2",
+                         "dotenv":  "^17.2.3",
+                         "jsonwebtoken":  "^9.0.2"
+                     },
+    "devDependencies":  {
+                            "@types/jsonwebtoken":  "^9.0.5",
+                            "@types/node":  "^20.10.0",
+                            "rimraf":  "^5.0.5",
+                            "typescript":  "^5.3.3"
+                        }
 }

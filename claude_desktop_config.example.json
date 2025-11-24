@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "vbmsaas": {
+      "command": "node",
+      "args": [
+        "d:/aicode/VBMCP/packages/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "VBMSAAS_API_URL": "https://api.vbmsaas.com",
+        "VBMSAAS_ACCESS_KEY": "your-access-key-here",
+        "VBMSAAS_PLATFORM_ID": "your-platform-id-here",
+        "JWT_SECRET": "vbmsaas-secret-key"
+      }
+    }
+  }
+}
+
