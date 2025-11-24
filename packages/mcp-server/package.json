@@ -5,13 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rimraf dist",
     "start": "node dist/index.js",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "env:check": "node -r dotenv/config dist/cli.js check",
+    "env:config": "node -r dotenv/config dist/cli.js config"
   },
   "bin": {
     "vbmsaas-mcp-server": "./dist/index.js"

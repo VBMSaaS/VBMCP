@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "VBMSaaS MCP Platform - Model Context Protocol integration for IDE and AI agents",
   "private": true,
-  "license": "MIT",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=18.0.0"
   },

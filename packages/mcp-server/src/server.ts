@@ -154,7 +154,7 @@ export class VBMSaaSMcpServer {
               },
               platformId: {
                 type: 'string',
-                description: 'Platform ID (default: 0b1d178c499043a2aeeef591a3d8f03d)'
+                description: 'Platform ID'
               },
               roleTag: {
                 type: 'string',
@@ -210,7 +210,7 @@ export class VBMSaaSMcpServer {
               },
               platformId: {
                 type: 'string',
-                description: 'Platform ID (default: 0b1d178c499043a2aeeef591a3d8f03d)'
+                description: 'Platform ID'
               },
               roleTag: {
                 type: 'string',
@@ -311,11 +311,11 @@ export class VBMSaaSMcpServer {
               },
               partId: {
                 type: 'string',
-                description: 'Application ID (default: 4570af857b8b41fd8952921bec419e9f)'
+                description: 'Application ID'
               },
               partitionId: {
                 type: 'string',
-                description: 'Partition ID (default: 0b1d178c499043a2aeeef591a3d8f03d)'
+                description: 'Partition ID'
               },
               userid: {
                 type: 'string',
@@ -1222,7 +1222,7 @@ export class VBMSaaSMcpServer {
         credentials.account,
         credentials.password,
         credentials.partitionId,
-        credentials.platformId || '0b1d178c499043a2aeeef591a3d8f03d',
+        credentials.platformId || process.env.VBMSAAS_PLATFORM_ID || '',
         credentials.roleTag || ''
       );
 
@@ -1381,9 +1381,15 @@ export class VBMSaaSMcpServer {
    */
   private async handleAddResource(args: any) {
     try {
-      // Use default values if not provided
-      const partId = args.partId || '4570af857b8b41fd8952921bec419e9f';
-      const partitionId = args.partitionId || '0b1d178c499043a2aeeef591a3d8f03d';
+      // Use values from args or throw error if not provided
+      if (!args.partId) {
+        throw new Error('partId is required');
+      }
+      if (!args.partitionId) {
+        throw new Error('partitionId is required');
+      }
+      const partId = args.partId;
+      const partitionId = args.partitionId;
       const userid = args.userid || this.currentUserId;
 
       console.log('[Server] ========================================');
@@ -1918,7 +1924,7 @@ export class VBMSaaSMcpServer {
         account,
         password,
         partitionId,
-        '0b1d178c499043a2aeeef591a3d8f03d',
+        process.env.VBMSAAS_PLATFORM_ID || '',
         'PC'
       );
 

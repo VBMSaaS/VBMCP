@@ -1,0 +1,22 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug MCP Server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/mcp-server/dist/index.js",
+      "cwd": "${workspaceFolder}/packages/mcp-server",
+      "env": {
+        "VBMSAAS_API_URL": "${env:VBMSAAS_API_URL}",
+        "VBMSAAS_ACCESS_KEY": "${env:VBMSAAS_ACCESS_KEY}",
+        "VBMSAAS_PLATFORM_ID": "${env:VBMSAAS_PLATFORM_ID}",
+        "JWT_SECRET": "vbmsaas-dev-secret"
+      },
+      "outFiles": [
+        "${workspaceFolder}/packages/mcp-server/dist/**/*.js"
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}

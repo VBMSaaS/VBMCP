@@ -573,7 +573,7 @@ export interface AddPrivateResourceRequest {
   typeName: string;              // 资源类型名称 (使用资源名称)
   resourceType: string;          // 资源类型 (如 "common")
   partId: string;                // 应用ID
-  PartitionId: string;           // 平台分区ID (固定为 "0b1d178c499043a2aeeef591a3d8f03d")
+  PartitionId: string;           // 平台分区ID
   inMap: boolean;                // 是否在地图中 (固定为 false)
   inBluePrint: boolean;          // 是否在蓝图中 (固定为 false)
 }

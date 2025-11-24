@@ -41,7 +41,7 @@ export class AuthService {
       const loginResult = await this.apiService.loginDirect(
         request.account,
         request.password,
-        '0b1d178c499043a2aeeef591a3d8f03d',  // platformId
+        process.env.VBMSAAS_PLATFORM_ID || '',  // platformId
         undefined,  // ⚠️ No partitionId for initial login
         'PC'  // roleTag
       );
