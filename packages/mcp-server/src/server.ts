@@ -16,7 +16,10 @@ import { AuthService } from './services/auth.js';
 import { VBMSaaSApiService } from './services/api.js';
 import { AuthStorageService } from './services/authStorage.js';
 import { CredentialsStorageService } from './services/credentialsStorage.js';
-import { ServerConfig, LoginRequest, ServiceCallRequest } from './types.js';
+import { ApiConfigParser } from './services/apiConfigParser.js';
+import { ApiConfigSaver } from './services/apiConfigSaver.js';
+import { ApiTester } from './services/apiTester.js';
+import { ServerConfig, LoginRequest, ServiceCallRequest, CreateApiFromDescriptionRequest, TestApiRequest } from './types.js';
 
 export class VBMSaaSMcpServer {
   private server: Server;
@@ -24,6 +27,9 @@ export class VBMSaaSMcpServer {
   private apiService: VBMSaaSApiService;
   private authStorage: AuthStorageService;
   private credentialsStorage: CredentialsStorageService;
+  private apiConfigParser: ApiConfigParser;
+  private apiConfigSaver: ApiConfigSaver;
+  private apiTester: ApiTester;
   private config: ServerConfig;
   private currentToken: string | null = null;  // Session token for MCP client
   private vbmsaasToken: string | null = null;  // VBMSaaS API token
@@ -41,6 +47,9 @@ export class VBMSaaSMcpServer {
     this.authService = new AuthService(config.jwtSecret, this.apiService);
     this.authStorage = new AuthStorageService();
     this.credentialsStorage = new CredentialsStorageService();
+    this.apiConfigParser = new ApiConfigParser();
+    this.apiConfigSaver = new ApiConfigSaver(this.apiService);
+    this.apiTester = new ApiTester(this.apiService);
 
     // Create MCP server instance
     this.server = new Server(
@@ -644,6 +653,43 @@ export class VBMSaaSMcpServer {
             },
             required: ['partId']
           }
+        },
+        {
+          name: 'vbmsaas_create_api_from_description',
+          description: 'Create API configuration from text description and save to resource database. Parses the description to extract API metadata, parameters, conditions, columns, and table usage, then saves them to the five API configuration resources (vbio, vbio_parameters, vbio_conditions, vbio_columns, vbio_column_usage). Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              description: {
+                type: 'string',
+                description: 'API requirement text description (can be markdown format with API name, route, method, parameters, response fields, etc.)'
+              },
+              partitionId: {
+                type: 'string',
+                description: 'Partition ID (optional, defaults to current user partition)'
+              }
+            },
+            required: ['description']
+          }
+        },
+        {
+          name: 'vbmsaas_test_api',
+          description: 'Test a configured API by its Mid. Retrieves the API configuration, validates parameters, and executes the API call. Returns the API response along with execution details. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              apiMid: {
+                type: 'string',
+                description: 'API Mid (primary key of vbio table)'
+              },
+              testParams: {
+                type: 'object',
+                description: 'Test parameters as key-value pairs (optional)',
+                additionalProperties: true
+              }
+            },
+            required: ['apiMid']
+          }
         }
       ];
 
@@ -721,6 +767,12 @@ export class VBMSaaSMcpServer {
 
           case 'vbmsaas_get_pages':
             return await this.handleGetPages(args as any);
+
+          case 'vbmsaas_create_api_from_description':
+            return await this.handleCreateApiFromDescription(args as any);
+
+          case 'vbmsaas_test_api':
+            return await this.handleTestApi(args as any);
 
           default:
             return {
@@ -2335,6 +2387,166 @@ export class VBMSaaSMcpServer {
             text: JSON.stringify({
               success: false,
               message: error instanceof Error ? error.message : 'Failed to get pages'
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle create API from description
+   */
+  private async handleCreateApiFromDescription(args: CreateApiFromDescriptionRequest) {
+    console.log('[Server] ========================================');
+    console.log('[Server] Handling create API from description');
+    console.log('[Server] Description length:', args.description?.length || 0);
+    console.log('[Server] Partition ID:', args.partitionId || 'default');
+
+    try {
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.error('[Server] Not authenticated');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not authenticated. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Get partition ID from args or environment variable
+      const partitionId = args.partitionId || process.env.VBMSAAS_PARTITION_ID;
+      if (!partitionId) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Partition ID is required. Please provide partitionId parameter or set VBMSAAS_PARTITION_ID environment variable.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      // 1. Parse description
+      console.log('[Server] Parsing API description...');
+      const parsedConfig = await this.apiConfigParser.parseDescription(args.description);
+      console.log('[Server] Parsed config:', JSON.stringify(parsedConfig, null, 2));
+
+      // 2. Save configuration
+      console.log('[Server] Saving API configuration...');
+      const savedResult = await this.apiConfigSaver.saveConfig(parsedConfig, partitionId);
+      console.log('[Server] Save result - vbioMid:', savedResult.vbioMid);
+
+      const result = {
+        success: true,
+        message: 'API配置创建成功',
+        data: {
+          apiMid: savedResult.vbioMid,
+          vbioMid: savedResult.vbioMid,
+          config: parsedConfig,
+          savedRecords: {
+            vbio: savedResult.vbio,
+            parameters: savedResult.parameters,
+            conditions: savedResult.conditions,
+            columns: savedResult.columns,
+            tableUsages: savedResult.tableUsages
+          }
+        }
+      };
+
+      console.log('[Server] Create API from description completed successfully');
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Create API from description error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to create API from description',
+              error: error instanceof Error ? error.stack : String(error)
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle test API
+   */
+  private async handleTestApi(args: TestApiRequest) {
+    console.log('[Server] ========================================');
+    console.log('[Server] Handling test API');
+    console.log('[Server] API Mid:', args.apiMid);
+    console.log('[Server] Test params:', args.testParams);
+
+    try {
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.error('[Server] Not authenticated');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not authenticated. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      // Test API
+      const result = await this.apiTester.testApi(args.apiMid, args.testParams);
+
+      console.log('[Server] Test API result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Test API error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to test API',
+              error: error instanceof Error ? error.stack : String(error)
             })
           }
         ]

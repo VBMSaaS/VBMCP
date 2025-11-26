@@ -1963,5 +1963,92 @@ export class VBMSaaSApiService {
       };
     }
   }
+
+  /**
+   * Add resource data (添加资源数据)
+   *
+   * @param request - Add resource data request
+   * @returns Add resource data response
+   */
+  async addResourceData(request: {
+    categoryId: string;
+    data: Record<string, any>;
+    cst?: number;
+    partitionId?: string;
+    userid?: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    mid?: string;
+  }> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMSaaSApiService] Adding resource data');
+      console.log('[VBMSaaSApiService] Category ID:', request.categoryId);
+      console.log('[VBMSaaSApiService] Data:', JSON.stringify(request.data, null, 2));
+
+      // 构建请求参数
+      const params: Record<string, any> = {
+        category: request.categoryId,
+        cst: request.cst || 1
+      };
+
+      // 如果提供了partitionId和userid,添加到参数中
+      if (request.partitionId) {
+        params.partitionId = request.partitionId;
+      }
+      if (request.userid) {
+        params.userid = request.userid;
+      }
+
+      const response = await this.client.post('/api/data/add', request.data, {
+        params
+      });
+
+      console.log('[VBMSaaSApiService] Add resource data response:', response.data);
+
+      if (response.data.Status === 0 && response.data.ErrorCode === 0) {
+        console.log('[VBMSaaSaaS] ✅ Resource data added successfully');
+        const mid = response.data.Result?.mid || response.data.Result;
+        return {
+          success: true,
+          message: response.data.Message || 'Resource data added successfully',
+          data: response.data.Result,
+          mid
+        };
+      } else {
+        console.error('[VBMSaaSApiService] ❌ Failed to add resource data:', response.data.Message);
+        return {
+          success: false,
+          message: response.data.Message || 'Failed to add resource data',
+          data: response.data
+        };
+      }
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error adding resource data:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      let errorData = undefined;
+
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          errorMessage = (axiosError.response.data as any)?.Message || axiosError.message;
+          errorData = axiosError.response.data;
+        } else {
+          errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage,
+        data: errorData
+      };
+    }
+  }
 }
 

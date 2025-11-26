@@ -938,3 +938,139 @@ export interface GetPagesResponse {
   totalPages?: number;               // 总页数
 }
 
+// ============================================
+// API Configuration Types (API配置类型)
+// ============================================
+
+/**
+ * API parameter definition (vbio_parameters)
+ */
+export interface ApiParameter {
+  ParamName: string;                 // 参数名称
+  ParamType: string;                 // 参数类型: string, int, bool, etc.
+  ArrayType?: boolean;               // 是否数组
+  Required?: boolean;                // 是否必选
+  NotNullable?: boolean;             // 是否不可空
+  ParamDefault?: string;             // 默认值
+  ParamIn?: string;                  // 使用方式: query, body, path, header
+  ValidationRule?: string;           // 校验规则
+  ParamDesc?: string;                // 参数说明
+}
+
+/**
+ * API condition definition (vbio_conditions)
+ */
+export interface ApiCondition {
+  CondStatement: string;             // 条件表达式 (如: "age > ?")
+  CondConnector?: string;            // 条件连接符: AND, OR
+  OpenParenthesis?: string;          // 左圆括弧
+  CloseParenthesis?: string;         // 右圆括弧
+  ParamName?: string;                // 对应参数名
+  OrderNo?: number;                  // 序号
+}
+
+/**
+ * API column definition (vbio_columns)
+ */
+export interface ApiColumn {
+  ColumnName: string;                // 字段名称
+  ColumnDesc?: string;               // 字段描述
+  ColumnType: string;                // 数据类型
+  ArrayType?: boolean;               // 是否数组
+  ColumnFormat?: string;             // 数据类型格式
+}
+
+/**
+ * API table usage (vbio_column_usage)
+ */
+export interface ApiTableUsage {
+  TableSchema: string;               // 表模式名
+  TableName: string;                 // 表名
+  ResourceId?: string;               // 资源ID
+  ColumnId?: number;                 // 列ID
+}
+
+/**
+ * Parsed API configuration from description
+ */
+export interface ParsedApiConfig {
+  // vbio 基本信息
+  name: string;                      // API名称
+  description: string;               // API描述
+  apiType?: string;                  // 接口类型
+  httpMethod: string;                // HTTP方法: GET, POST, PUT, DELETE
+  routePath: string;                 // 路由地址
+  resultType?: string;               // 返回结果类型
+  authType?: string;                 // 认证类型
+  apiSql?: string;                   // SQL语句
+  apiSqlOrderBy?: string;            // 排序语句
+  countSql?: string;                 // 计数SQL
+  apiResponseWrapper?: string;       // 响应结果封装器
+
+  // 关联数据
+  parameters?: ApiParameter[];       // 参数列表
+  conditions?: ApiCondition[];       // 条件列表
+  columns?: ApiColumn[];             // 返回字段列表
+  tableUsages?: ApiTableUsage[];     // 使用的表列表
+}
+
+/**
+ * Create API from description request
+ */
+export interface CreateApiFromDescriptionRequest {
+  description: string;               // API需求的文字描述
+  partitionId?: string;              // 分区ID (可选,默认使用当前用户分区)
+}
+
+/**
+ * Create API from description response
+ */
+export interface CreateApiFromDescriptionResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    apiMid: string;                  // 创建的API的Mid
+    vbioMid: string;                 // vbio记录的Mid
+    config: ParsedApiConfig;         // 解析的配置
+    savedRecords: {
+      vbio: any;                     // vbio记录
+      parameters: any[];             // 参数记录
+      conditions: any[];             // 条件记录
+      columns: any[];                // 字段记录
+      tableUsages: any[];            // 表使用记录
+    };
+  };
+}
+
+/**
+ * Test API request
+ */
+export interface TestApiRequest {
+  apiMid: string;                    // API的Mid (vbio表的主键)
+  testParams?: Record<string, any>;  // 测试参数 (键值对)
+}
+
+/**
+ * Test API response
+ */
+export interface TestApiResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    apiConfig: any;                  // API配置信息
+    requestInfo: {
+      method: string;                // 请求方法
+      url?: string;                  // 请求URL
+      sql?: string;                  // 执行的SQL
+      params: Record<string, any>;   // 请求参数
+    };
+    response: any;                   // API响应数据
+    executionTime: number;           // 执行时间(毫秒)
+  };
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+}
+

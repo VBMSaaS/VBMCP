@@ -1,0 +1,20 @@
+[
+  {
+    "api_id": "1479b793104d46a5b087e27aee0f1175",
+    "cond_statement": "\"btu\".data_id = any(#{orderedTollUnitDataIds}::int8[])",
+    "cond_connector": "and",
+    "open_parenthesis": null,
+    "close_parenthesis": null,
+    "param_name": "orderedTollUnitDataIds",
+    "order_no": 99999
+  },
+  {
+    "api_id": "1479b793104d46a5b087e27aee0f1175",
+    "cond_statement": "\"btu\".deleted=false",
+    "cond_connector": "and",
+    "open_parenthesis": null,
+    "close_parenthesis": null,
+    "param_name": null,
+    "order_no": 99999
+  }
+]
