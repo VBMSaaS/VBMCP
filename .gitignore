@@ -70,6 +70,9 @@ GIT_COMMIT_CHECKLIST.md
 doc/
 docs/
 
+# Development reference (local only)
+vbio/
+
 # Temporary files
 tmp/
 temp/
