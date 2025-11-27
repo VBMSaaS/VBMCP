@@ -42,7 +42,17 @@ import {
   AddPageRequest,
   AddPageResponse,
   GetPagesRequest,
-  GetPagesResponse
+  GetPagesResponse,
+  QueryResourceDataRequest,
+  QueryResourceDataResponse,
+  GetResourceDataRequest,
+  GetResourceDataResponse,
+  UpdateResourceDataRequest,
+  UpdateResourceDataResponse,
+  DeleteResourceDataRequest,
+  DeleteResourceDataResponse,
+  BatchResourceDataRequest,
+  BatchResourceDataResponse
 } from '../types.js';
 import { SignatureHelper } from '../utils/SignatureHelper.js';
 
@@ -2047,6 +2057,396 @@ export class VBMSaaSApiService {
         success: false,
         message: errorMessage,
         data: errorData
+      };
+    }
+  }
+
+  /**
+   * Query resource data (查询资源数据)
+   *
+   * @param request - Query resource data request
+   * @returns Query resource data response
+   */
+  async queryResourceData(request: QueryResourceDataRequest): Promise<QueryResourceDataResponse> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMSaaSApiService] Querying resource data');
+      console.log('[VBMSaaSApiService] Category ID:', request.categoryId);
+      console.log('[VBMSaaSApiService] Page:', request.page || 1);
+      console.log('[VBMSaaSApiService] Page Size:', request.pageSize || 10);
+
+      // 构建查询参数
+      const params: Record<string, any> = {
+        category: request.categoryId,
+        page: request.page || 1,
+        pageSize: request.pageSize || 10,
+        cst: request.cst || 1
+      };
+
+      // 添加排序参数
+      if (request.orderBy) {
+        params.orderBy = request.orderBy;
+        params.orderDirection = request.orderDirection || 'asc';
+      }
+
+      // 添加字段过滤
+      if (request.fields && request.fields.length > 0) {
+        params.fields = request.fields.join(',');
+      }
+
+      // 添加查询条件
+      if (request.conditions && Object.keys(request.conditions).length > 0) {
+        params.conditions = JSON.stringify(request.conditions);
+      }
+
+      const response = await this.client.get('/api/data/query', { params });
+
+      console.log('[VBMSaaSApiService] Query resource data response:', response.data);
+
+      if (response.data.Status === 0 && response.data.ErrorCode === 0) {
+        console.log('[VBMSaaSApiService] ✅ Resource data queried successfully');
+        const result = response.data.Result || {};
+        const items = result.items || result.list || [];
+        const total = result.total || result.count || 0;
+        const page = request.page || 1;
+        const pageSize = request.pageSize || 10;
+        const totalPages = Math.ceil(total / pageSize);
+
+        return {
+          success: true,
+          message: response.data.Message || 'Resource data queried successfully',
+          data: {
+            items,
+            total,
+            page,
+            pageSize,
+            totalPages
+          }
+        };
+      } else {
+        console.error('[VBMSaaSApiService] ❌ Failed to query resource data:', response.data.Message);
+        return {
+          success: false,
+          message: response.data.Message || 'Failed to query resource data'
+        };
+      }
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error querying resource data:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          errorMessage = (axiosError.response.data as any)?.Message || axiosError.message;
+        } else {
+          errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Get resource data (获取单条资源数据)
+   *
+   * @param request - Get resource data request
+   * @returns Get resource data response
+   */
+  async getResourceData(request: GetResourceDataRequest): Promise<GetResourceDataResponse> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMSaaSApiService] Getting resource data');
+      console.log('[VBMSaaSApiService] Data ID (mid):', request.mid);
+      console.log('[VBMSaaSApiService] Category ID:', request.categoryId);
+
+      const response = await this.client.get('/api/data/get', {
+        params: {
+          mid: request.mid,
+          categoryId: request.categoryId,
+          withQuote: request.withQuote !== undefined ? request.withQuote : true,
+          cst: request.cst || 1
+        }
+      });
+
+      console.log('[VBMSaaSApiService] Get resource data response:', response.data);
+
+      if (response.data.Status === 0 && response.data.ErrorCode === 0) {
+        console.log('[VBMSaaSApiService] ✅ Resource data retrieved successfully');
+        return {
+          success: true,
+          message: response.data.Message || 'Resource data retrieved successfully',
+          data: response.data.Result
+        };
+      } else {
+        console.error('[VBMSaaSApiService] ❌ Failed to get resource data:', response.data.Message);
+        return {
+          success: false,
+          message: response.data.Message || 'Failed to get resource data'
+        };
+      }
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error getting resource data:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          errorMessage = (axiosError.response.data as any)?.Message || axiosError.message;
+        } else {
+          errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Update resource data (更新资源数据)
+   *
+   * @param request - Update resource data request
+   * @returns Update resource data response
+   */
+  async updateResourceData(request: UpdateResourceDataRequest): Promise<UpdateResourceDataResponse> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMaaSApiService] Updating resource data');
+      console.log('[VBMSaaSApiService] Data ID (mid):', request.mid);
+      console.log('[VBMSaaSApiService] Category ID:', request.categoryId);
+      console.log('[VBMSaaSApiService] Data:', JSON.stringify(request.data, null, 2));
+
+      const response = await this.client.post('/api/data/update', request.data, {
+        params: {
+          mid: request.mid,
+          category: request.categoryId,
+          cst: request.cst || 1
+        }
+      });
+
+      console.log('[VBMSaaSApiService] Update resource data response:', response.data);
+
+      if (response.data.Status === 0 && response.data.ErrorCode === 0) {
+        console.log('[VBMSaaSApiService] ✅ Resource data updated successfully');
+        return {
+          success: true,
+          message: response.data.Message || 'Resource data updated successfully',
+          data: response.data.Result
+        };
+      } else {
+        console.error('[VBMSaaSApiService] ❌ Failed to update resource data:', response.data.Message);
+        return {
+          success: false,
+          message: response.data.Message || 'Failed to update resource data'
+        };
+      }
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error updating resource data:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          errorMessage = (axiosError.response.data as any)?.Message || axiosError.message;
+        } else {
+          errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Delete resource data (删除资源数据)
+   *
+   * @param request - Delete resource data request
+   * @returns Delete resource data response
+   */
+  async deleteResourceData(request: DeleteResourceDataRequest): Promise<DeleteResourceDataResponse> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMSaaSApiService] Deleting resource data');
+      console.log('[VBMSaaSApiService] Data ID (mid):', request.mid);
+
+      const params: Record<string, any> = {
+        mid: request.mid,
+        force: request.force || false,
+        cst: request.cst || 1
+      };
+
+      if (request.categoryId) {
+        params.categoryId = request.categoryId;
+      }
+
+      if (request.userid) {
+        params.userid = request.userid;
+      }
+
+      const response = await this.client.get('/api/data/delete', { params });
+
+      console.log('[VBMSaaSApiService] Delete resource data response:', response.data);
+
+      if (response.data.Status === 0 && response.data.ErrorCode === 0) {
+        console.log('[VBMSaaSApiService] ✅ Resource data deleted successfully');
+        return {
+          success: true,
+          message: response.data.Message || 'Resource data deleted successfully',
+          data: response.data.Result
+        };
+      } else {
+        console.error('[VBMSaaSApiService] ❌ Failed to delete resource data:', response.data.Message);
+        return {
+          success: false,
+          message: response.data.Message || 'Failed to delete resource data'
+        };
+      }
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error deleting resource data:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response) {
+          errorMessage = (axiosError.response.data as any)?.Message || axiosError.message;
+        } else {
+          errorMessage = axiosError.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Batch resource data operations (批量资源数据操作)
+   *
+   * @param request - Batch resource data request
+   * @returns Batch resource data response
+   */
+  async batchResourceData(request: BatchResourceDataRequest): Promise<BatchResourceDataResponse> {
+    try {
+      console.log('[VBMSaaSApiService] ========================================');
+      console.log('[VBMSaaSApiService] Batch resource data operations');
+      console.log('[VBMSaaSApiService] Category ID:', request.categoryId);
+      console.log('[VBMSaaSApiService] Operations count:', request.operations.length);
+
+      const results: any[] = [];
+      let successCount = 0;
+      let failureCount = 0;
+
+      // 逐个执行操作
+      for (const operation of request.operations) {
+        try {
+          let result: any = null;
+
+          switch (operation.operation) {
+            case 'add':
+              if (!operation.data) {
+                throw new Error('Data is required for add operation');
+              }
+              result = await this.addResourceData({
+                categoryId: request.categoryId,
+                data: operation.data,
+                cst: request.cst
+              });
+              break;
+
+            case 'update':
+              if (!operation.mid || !operation.data) {
+                throw new Error('Mid and data are required for update operation');
+              }
+              result = await this.updateResourceData({
+                mid: operation.mid,
+                categoryId: request.categoryId,
+                data: operation.data,
+                cst: request.cst
+              });
+              break;
+
+            case 'delete':
+              if (!operation.mid) {
+                throw new Error('Mid is required for delete operation');
+              }
+              result = await this.deleteResourceData({
+                mid: operation.mid,
+                categoryId: request.categoryId,
+                cst: request.cst
+              });
+              break;
+
+            default:
+              throw new Error(`Unknown operation type: ${operation.operation}`);
+          }
+
+          if (result.success) {
+            successCount++;
+          } else {
+            failureCount++;
+          }
+
+          results.push({
+            operation: operation.operation,
+            mid: operation.mid,
+            success: result.success,
+            message: result.message,
+            data: result.data
+          });
+        } catch (error) {
+          failureCount++;
+          results.push({
+            operation: operation.operation,
+            mid: operation.mid,
+            success: false,
+            message: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      console.log('[VBMSaaSApiService] ✅ Batch operations completed');
+      console.log('[VBMSaaSApiService] Success:', successCount, 'Failure:', failureCount);
+
+      return {
+        success: true,
+        message: `Batch operations completed: ${successCount} succeeded, ${failureCount} failed`,
+        data: {
+          results,
+          successCount,
+          failureCount,
+          total: request.operations.length
+        }
+      };
+    } catch (error) {
+      console.error('[VBMSaaSApiService] ❌ Error in batch operations:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        message: errorMessage
       };
     }
   }

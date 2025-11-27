@@ -1,6 +1,6 @@
 ﻿{
     "name":  "@vbmsaas/mcp-server",
-    "version":  "1.1.0",
+    "version":  "1.2.0",
     "description":  "VBMSaaS MCP Server - Model Context Protocol server for VBMSaaS platform integration",
     "type":  "module",
     "main":  "dist/index.js",

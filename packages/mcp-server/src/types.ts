@@ -1074,3 +1074,142 @@ export interface TestApiResponse {
   };
 }
 
+// ============================================
+// Data Management Types (数据管理类型)
+// ============================================
+
+/**
+ * Query resource data request (查询资源数据请求)
+ */
+export interface QueryResourceDataRequest {
+  categoryId: string;                // 资源分类ID
+  page?: number;                     // 页码 (从1开始,默认1)
+  pageSize?: number;                 // 每页数量 (默认10)
+  conditions?: Record<string, any>;  // 查询条件 (字段名:值)
+  orderBy?: string;                  // 排序字段
+  orderDirection?: 'asc' | 'desc';   // 排序方向 (默认asc)
+  fields?: string[];                 // 返回字段列表 (不指定则返回全部)
+  cst?: number;                      // 坐标系 (默认1)
+}
+
+/**
+ * Query resource data response (查询资源数据响应)
+ */
+export interface QueryResourceDataResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    items: any[];                    // 数据列表
+    total: number;                   // 总记录数
+    page: number;                    // 当前页码
+    pageSize: number;                // 每页数量
+    totalPages: number;              // 总页数
+  };
+}
+
+/**
+ * Get resource data request (获取单条资源数据请求)
+ */
+export interface GetResourceDataRequest {
+  mid: string;                       // 数据ID
+  categoryId: string;                // 资源分类ID
+  withQuote?: boolean;               // 是否包含引用 (默认true)
+  cst?: number;                      // 坐标系 (默认1)
+}
+
+/**
+ * Get resource data response (获取单条资源数据响应)
+ */
+export interface GetResourceDataResponse {
+  success: boolean;
+  message?: string;
+  data?: any;                        // 数据对象
+}
+
+/**
+ * Update resource data request (更新资源数据请求)
+ */
+export interface UpdateResourceDataRequest {
+  mid: string;                       // 数据ID
+  categoryId: string;                // 资源分类ID
+  data: Record<string, any>;         // 要更新的数据 (字段名:值)
+  cst?: number;                      // 坐标系 (默认1)
+}
+
+/**
+ * Update resource data response (更新资源数据响应)
+ */
+export interface UpdateResourceDataResponse {
+  success: boolean;
+  message?: string;
+  data?: any;                        // 更新后的数据
+}
+
+/**
+ * Delete resource data request (删除资源数据请求)
+ */
+export interface DeleteResourceDataRequest {
+  mid: string;                       // 数据ID
+  categoryId?: string;               // 资源分类ID (可选)
+  force?: boolean;                   // 是否强制删除 (默认false)
+  userid?: string;                   // 用户ID (可选)
+  cst?: number;                      // 坐标系 (默认1)
+}
+
+/**
+ * Delete resource data response (删除资源数据响应)
+ */
+export interface DeleteResourceDataResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
+}
+
+/**
+ * Batch operation type (批量操作类型)
+ */
+export type BatchOperationType = 'add' | 'update' | 'delete';
+
+/**
+ * Batch operation item (批量操作项)
+ */
+export interface BatchOperationItem {
+  operation: BatchOperationType;     // 操作类型
+  mid?: string;                      // 数据ID (update/delete时必需)
+  data?: Record<string, any>;        // 数据 (add/update时必需)
+}
+
+/**
+ * Batch resource data request (批量操作资源数据请求)
+ */
+export interface BatchResourceDataRequest {
+  categoryId: string;                // 资源分类ID
+  operations: BatchOperationItem[];  // 操作列表
+  cst?: number;                      // 坐标系 (默认1)
+}
+
+/**
+ * Batch operation result (批量操作结果)
+ */
+export interface BatchOperationResult {
+  operation: BatchOperationType;     // 操作类型
+  mid?: string;                      // 数据ID
+  success: boolean;                  // 是否成功
+  message?: string;                  // 消息
+  data?: any;                        // 结果数据
+}
+
+/**
+ * Batch resource data response (批量操作资源数据响应)
+ */
+export interface BatchResourceDataResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    results: BatchOperationResult[]; // 操作结果列表
+    successCount: number;            // 成功数量
+    failureCount: number;            // 失败数量
+    total: number;                   // 总数量
+  };
+}
+

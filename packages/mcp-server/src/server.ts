@@ -690,6 +690,156 @@ export class VBMSaaSMcpServer {
             },
             required: ['apiMid']
           }
+        },
+        {
+          name: 'vbmsaas_query_resource_data',
+          description: 'Query resource data with pagination, filtering, and sorting. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              categoryId: {
+                type: 'string',
+                description: 'Resource category ID'
+              },
+              page: {
+                type: 'number',
+                description: 'Page number (starts from 1, default: 1)'
+              },
+              pageSize: {
+                type: 'number',
+                description: 'Page size (default: 10)'
+              },
+              conditions: {
+                type: 'object',
+                description: 'Query conditions as key-value pairs (field name: value)',
+                additionalProperties: true
+              },
+              orderBy: {
+                type: 'string',
+                description: 'Sort field name'
+              },
+              orderDirection: {
+                type: 'string',
+                description: 'Sort direction: asc or desc (default: asc)',
+                enum: ['asc', 'desc']
+              },
+              fields: {
+                type: 'array',
+                description: 'Fields to return (returns all if not specified)',
+                items: { type: 'string' }
+              }
+            },
+            required: ['categoryId']
+          }
+        },
+        {
+          name: 'vbmsaas_get_resource_data',
+          description: 'Get a single resource data record by its Mid. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              mid: {
+                type: 'string',
+                description: 'Data record ID'
+              },
+              categoryId: {
+                type: 'string',
+                description: 'Resource category ID'
+              },
+              withQuote: {
+                type: 'boolean',
+                description: 'Whether to include quotes (default: true)'
+              }
+            },
+            required: ['mid', 'categoryId']
+          }
+        },
+        {
+          name: 'vbmsaas_update_resource_data',
+          description: 'Update a resource data record. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              mid: {
+                type: 'string',
+                description: 'Data record ID'
+              },
+              categoryId: {
+                type: 'string',
+                description: 'Resource category ID'
+              },
+              data: {
+                type: 'object',
+                description: 'Data to update as key-value pairs (field name: value)',
+                additionalProperties: true
+              }
+            },
+            required: ['mid', 'categoryId', 'data']
+          }
+        },
+        {
+          name: 'vbmsaas_delete_resource_data',
+          description: 'Delete a resource data record. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              mid: {
+                type: 'string',
+                description: 'Data record ID'
+              },
+              categoryId: {
+                type: 'string',
+                description: 'Resource category ID (optional)'
+              },
+              force: {
+                type: 'boolean',
+                description: 'Whether to force delete (default: false)'
+              },
+              userid: {
+                type: 'string',
+                description: 'User ID (optional, uses authenticated user if not provided)'
+              }
+            },
+            required: ['mid']
+          }
+        },
+        {
+          name: 'vbmsaas_batch_resource_data',
+          description: 'Perform batch operations (add, update, delete) on resource data. Requires authentication.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              categoryId: {
+                type: 'string',
+                description: 'Resource category ID'
+              },
+              operations: {
+                type: 'array',
+                description: 'Array of operations to perform',
+                items: {
+                  type: 'object',
+                  properties: {
+                    operation: {
+                      type: 'string',
+                      description: 'Operation type: add, update, or delete',
+                      enum: ['add', 'update', 'delete']
+                    },
+                    mid: {
+                      type: 'string',
+                      description: 'Data record ID (required for update/delete)'
+                    },
+                    data: {
+                      type: 'object',
+                      description: 'Data object (required for add/update)',
+                      additionalProperties: true
+                    }
+                  },
+                  required: ['operation']
+                }
+              }
+            },
+            required: ['categoryId', 'operations']
+          }
         }
       ];
 
@@ -773,6 +923,21 @@ export class VBMSaaSMcpServer {
 
           case 'vbmsaas_test_api':
             return await this.handleTestApi(args as any);
+
+          case 'vbmsaas_query_resource_data':
+            return await this.handleQueryResourceData(args as any);
+
+          case 'vbmsaas_get_resource_data':
+            return await this.handleGetResourceData(args as any);
+
+          case 'vbmsaas_update_resource_data':
+            return await this.handleUpdateResourceData(args as any);
+
+          case 'vbmsaas_delete_resource_data':
+            return await this.handleDeleteResourceData(args as any);
+
+          case 'vbmsaas_batch_resource_data':
+            return await this.handleBatchResourceData(args as any);
 
           default:
             return {
@@ -2547,6 +2712,321 @@ export class VBMSaaSMcpServer {
               success: false,
               message: error instanceof Error ? error.message : 'Failed to test API',
               error: error instanceof Error ? error.stack : String(error)
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle query resource data request
+   */
+  private async handleQueryResourceData(args: any) {
+    try {
+      console.log('[Server] ========================================');
+      console.log('[Server] Querying resource data');
+      console.log('[Server] Category ID:', args.categoryId);
+
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.log('[Server] ERROR: No VBMSaaS token available! User may not be logged in.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not logged in. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      const result = await this.apiService.queryResourceData({
+        categoryId: args.categoryId,
+        page: args.page,
+        pageSize: args.pageSize,
+        conditions: args.conditions,
+        orderBy: args.orderBy,
+        orderDirection: args.orderDirection,
+        fields: args.fields
+      });
+
+      console.log('[Server] Query resource data result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Query resource data error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to query resource data'
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle get resource data request
+   */
+  private async handleGetResourceData(args: any) {
+    try {
+      console.log('[Server] ========================================');
+      console.log('[Server] Getting resource data');
+      console.log('[Server] Data ID (mid):', args.mid);
+      console.log('[Server] Category ID:', args.categoryId);
+
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.log('[Server] ERROR: No VBMSaaS token available! User may not be logged in.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not logged in. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      const result = await this.apiService.getResourceData({
+        mid: args.mid,
+        categoryId: args.categoryId,
+        withQuote: args.withQuote
+      });
+
+      console.log('[Server] Get resource data result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Get resource data error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to get resource data'
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle update resource data request
+   */
+  private async handleUpdateResourceData(args: any) {
+    try {
+      console.log('[Server] ========================================');
+      console.log('[Server] Updating resource data');
+      console.log('[Server] Data ID (mid):', args.mid);
+      console.log('[Server] Category ID:', args.categoryId);
+
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.log('[Server] ERROR: No VBMSaaS token available! User may not be logged in.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not logged in. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      const result = await this.apiService.updateResourceData({
+        mid: args.mid,
+        categoryId: args.categoryId,
+        data: args.data
+      });
+
+      console.log('[Server] Update resource data result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Update resource data error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to update resource data'
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle delete resource data request
+   */
+  private async handleDeleteResourceData(args: any) {
+    try {
+      console.log('[Server] ========================================');
+      console.log('[Server] Deleting resource data');
+      console.log('[Server] Data ID (mid):', args.mid);
+
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.log('[Server] ERROR: No VBMSaaS token available! User may not be logged in.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not logged in. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Use authenticated user ID if not provided
+      const userid = args.userid || this.currentUserId;
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      const result = await this.apiService.deleteResourceData({
+        mid: args.mid,
+        categoryId: args.categoryId,
+        force: args.force,
+        userid: userid
+      });
+
+      console.log('[Server] Delete resource data result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Delete resource data error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to delete resource data'
+            })
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Handle batch resource data request
+   */
+  private async handleBatchResourceData(args: any) {
+    try {
+      console.log('[Server] ========================================');
+      console.log('[Server] Batch resource data operations');
+      console.log('[Server] Category ID:', args.categoryId);
+      console.log('[Server] Operations count:', args.operations?.length || 0);
+
+      // Check authentication
+      if (!this.vbmsaasToken) {
+        console.log('[Server] ERROR: No VBMSaaS token available! User may not be logged in.');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: false,
+                message: 'Not logged in. Please login first.'
+              })
+            }
+          ]
+        };
+      }
+
+      // Re-set auth token before API call
+      console.log('[Server] Re-setting auth token before API call');
+      this.apiService.setAuthToken(this.vbmsaasToken);
+
+      const result = await this.apiService.batchResourceData({
+        categoryId: args.categoryId,
+        operations: args.operations
+      });
+
+      console.log('[Server] Batch resource data result:', result.success ? 'Success' : result.message);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result)
+          }
+        ]
+      };
+    } catch (error) {
+      console.error('[Server] Batch resource data error:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: error instanceof Error ? error.message : 'Failed to batch resource data'
             })
           }
         ]

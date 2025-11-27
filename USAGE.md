@@ -193,10 +193,193 @@ A: 可以：
 
 A: 运行 `npm run env:check` 检查配置状态，确保所有必需的环境变量都已正确配置。
 
+## 数据管理工具
+
+VBMCP 提供了完整的数据管理功能，支持对资源数据进行增删改查操作。
+
+### 1. 查询数据 (`vbmsaas_query_resource_data`)
+
+查询资源数据，支持分页、条件过滤和排序。
+
+**参数**:
+- `categoryId` (必需): 资源分类ID
+- `page` (可选): 页码，从1开始，默认1
+- `pageSize` (可选): 每页数量，默认10
+- `conditions` (可选): 查询条件对象，如 `{"name": "张三", "age": 25}`
+- `orderBy` (可选): 排序字段名
+- `orderDirection` (可选): 排序方向，`asc` 或 `desc`，默认 `asc`
+- `fields` (可选): 返回字段列表，如 `["name", "age", "email"]`
+
+**示例**:
+```json
+{
+  "categoryId": "user_category_id",
+  "page": 1,
+  "pageSize": 20,
+  "conditions": {
+    "status": "active"
+  },
+  "orderBy": "createdAt",
+  "orderDirection": "desc",
+  "fields": ["name", "email", "createdAt"]
+}
+```
+
+### 2. 获取单条数据 (`vbmsaas_get_resource_data`)
+
+根据 Mid 获取单条资源数据。
+
+**参数**:
+- `mid` (必需): 数据记录ID
+- `categoryId` (必需): 资源分类ID
+- `withQuote` (可选): 是否包含引用，默认 true
+
+**示例**:
+```json
+{
+  "mid": "data_record_id",
+  "categoryId": "user_category_id",
+  "withQuote": true
+}
+```
+
+### 3. 添加数据 (`vbmsaas_add_resource_data`)
+
+添加新的资源数据记录。
+
+**参数**:
+- `categoryId` (必需): 资源分类ID
+- `data` (必需): 数据对象，字段名和值的键值对
+
+**示例**:
+```json
+{
+  "categoryId": "user_category_id",
+  "data": {
+    "name": "张三",
+    "email": "zhangsan@example.com",
+    "age": 25,
+    "status": "active"
+  }
+}
+```
+
+### 4. 更新数据 (`vbmsaas_update_resource_data`)
+
+更新已有的资源数据记录。
+
+**参数**:
+- `mid` (必需): 数据记录ID
+- `categoryId` (必需): 资源分类ID
+- `data` (必需): 要更新的数据对象
+
+**示例**:
+```json
+{
+  "mid": "data_record_id",
+  "categoryId": "user_category_id",
+  "data": {
+    "email": "newemail@example.com",
+    "status": "inactive"
+  }
+}
+```
+
+### 5. 删除数据 (`vbmsaas_delete_resource_data`)
+
+删除资源数据记录。
+
+**参数**:
+- `mid` (必需): 数据记录ID
+- `categoryId` (可选): 资源分类ID
+- `force` (可选): 是否强制删除，默认 false
+- `userid` (可选): 用户ID，默认使用当前登录用户
+
+**示例**:
+```json
+{
+  "mid": "data_record_id",
+  "categoryId": "user_category_id",
+  "force": false
+}
+```
+
+### 6. 批量操作 (`vbmsaas_batch_resource_data`)
+
+批量执行添加、更新、删除操作。
+
+**参数**:
+- `categoryId` (必需): 资源分类ID
+- `operations` (必需): 操作数组，每个操作包含:
+  - `operation`: 操作类型，`add`、`update` 或 `delete`
+  - `mid`: 数据记录ID（update/delete时必需）
+  - `data`: 数据对象（add/update时必需）
+
+**示例**:
+```json
+{
+  "categoryId": "user_category_id",
+  "operations": [
+    {
+      "operation": "add",
+      "data": {
+        "name": "李四",
+        "email": "lisi@example.com"
+      }
+    },
+    {
+      "operation": "update",
+      "mid": "existing_record_id",
+      "data": {
+        "status": "active"
+      }
+    },
+    {
+      "operation": "delete",
+      "mid": "record_to_delete_id"
+    }
+  ]
+}
+```
+
+**返回结果**:
+```json
+{
+  "success": true,
+  "message": "Batch operations completed: 2 succeeded, 1 failed",
+  "data": {
+    "results": [
+      {
+        "operation": "add",
+        "success": true,
+        "mid": "new_record_id",
+        "data": {...}
+      },
+      {
+        "operation": "update",
+        "mid": "existing_record_id",
+        "success": true,
+        "data": {...}
+      },
+      {
+        "operation": "delete",
+        "mid": "record_to_delete_id",
+        "success": false,
+        "message": "Record not found"
+      }
+    ],
+    "successCount": 2,
+    "failureCount": 1,
+    "total": 3
+  }
+}
+```
+
 ## 安全提示
 
-⚠️ **重要**: 
+⚠️ **重要**:
 - 不要将 `.env` 文件提交到版本控制系统
 - 不要在公开场合分享您的访问密钥和平台ID
 - 定期更换访问密钥以提高安全性
+- 数据操作前请确保已正确登录并有相应权限
 
